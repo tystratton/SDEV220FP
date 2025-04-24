@@ -34,27 +34,23 @@ def admin():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    # Collect form data
     first_name = request.form['first_name']
     last_name = request.form['last_name']
-    full_name = f"{first_name} {last_name}"
     email = request.form['email']
     phone = request.form['phone']
-    date = request.form['date']
-    time = request.form['time']
-    # Combine date and time into appointment_time
-    appointment_time = f"{date} {time}"
+    appointment_time = request.form['datetime']  # combined date and time field
     event_type = request.form['type']
-    gender_identity = request.form.get('gender_identity', '')  # Optional field
-    notes = request.form['notes']
+    gender_identity = request.form.get('gender_identity', '')
+    notes = request.form.get('notes', '')
 
-    # Insert into the database
     cur.execute("""
-        INSERT INTO appointments (full_name, email, phone, appointment_time, event_type, gender_identity, notes)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """, (full_name, email, phone, appointment_time, event_type, gender_identity, notes))
+        INSERT INTO appointments (first_name, last_name, email, phone, appointment_time, event_type, gender_identity, notes)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (first_name, last_name, email, phone, appointment_time, event_type, gender_identity, notes))
 
     conn.commit()
+    return redirect(url_for('thank_you'))
+
 
     # Redirect to a dedicated thank-you page
     return redirect(url_for('thank_you'))
