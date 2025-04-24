@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gifted Gown - Admin</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .header h2 {
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1 1 100%;
+      margin-bottom: 10px;
+    }
+
+    .header button,
+    .logout-container button {
+      background-color: #3c4db3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .logout-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 8px;
+      overflow-x: auto;
+      display: block;
+    }
+
+    thead, tbody {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      word-wrap: break-word;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #fafafa;
+      font-weight: 600;
+    }
+
+    tr:not(:last-child) {
+      border-bottom: 1px solid #eee;
+    }
+
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .circle-btn {
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      border: 1.5px solid #ccc;
+      background: none;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+
+    .form-popup {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -20%);
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      z-index: 1000;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    .form-popup input, .form-popup select, .form-popup textarea {
+      display: block;
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 100%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .form-popup button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logout-container">
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <div class="header">
+    <h2>Gifted Gown</h2>
+  </div>
+  <div class="header">
+    <h2>Appointments ✏️</h2>
+    <button onclick="openForm()">Add Appointment</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Event Type</th>
+        <th>Gender</th>
+        <th>Notes</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for appt in appointments %}
+      <tr data-id="{{ appt[0] }}">
+        <td><input type="text" value="{{ appt[1] }}" readonly /></td>
+        <td><input type="email" value="{{ appt[2] }}" readonly /></td>
+        <td><input type="text" value="{{ appt[3] }}" readonly /></td>
+        <td><input type="date" value="{{ appt[4].strftime('%Y-%m-%d') if appt[4] else '' }}" readonly /></td>
+        <td><input type="time" value="{{ appt[4].strftime('%H:%M') if appt[4] else '' }}" readonly /></td>
+        <td><input type="text" value="{{ appt[5] }}" readonly /></td>
+        <td><input type="text" value="{{ appt[6] }}" readonly /></td>
+        <td><textarea readonly>{{ appt[7] }}</textarea></td>
+        <td>
+          <button type="button" onclick="openEditForm('{{ appt[0] }}')">✏️</button>
+          <form action="{{ url_for('delete_appointment', id=appt[0]) }}" method="post" style="display:inline;">
+            <button type="submit">🗑️</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="form-popup" id="formPopup">
+    <h3>Add/Edit Appointment</h3>
+    <form id="popupForm" action="/add" method="post">
+      <input type="hidden" id="apptId" name="apptId" />
+      <input type="text" name="full_name" placeholder="Full Name" required />
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="text" name="phone" placeholder="Phone" required />
+      <input type="date" name="date" required />
+      <input type="time" name="time" required />
+      <input type="text" name="event_type" placeholder="Event Type" required />
+      <input type="text" name="gender_identity" placeholder="Gender Identity" />
+      <textarea name="notes" placeholder="Notes"></textarea>
+      <button type="submit">Save</button>
+      <button type="button" onclick="closeForm()">Cancel</button>
+    </form>
+  </div>
+
+  <script>
+    function openForm() {
+      const form = document.getElementById("popupForm");
+      document.getElementById("formPopup").style.display = "block";
+      form.reset();
+      form.action = "/add";
+    }
+
+    function closeForm() {
+      document.getElementById("formPopup").style.display = "none";
+    }
+
+    function openEditForm(id) {
+      const row = document.querySelector(`tr[data-id='${id}']`);
+      if (!row) return;
+
+      const values = Array.from(row.querySelectorAll('input, textarea')).map(el => el.value);
+      const form = document.getElementById("popupForm");
+
+      document.getElementById("formPopup").style.display = "block";
+      document.getElementById("apptId").value = id;
+      form.action = `/edit/${id}`;
+
+      form.querySelector('[name="full_name"]').value = values[0];
+      form.querySelector('[name="email"]').value = values[1];
+      form.querySelector('[name="phone"]').value = values[2];
+      form.querySelector('[name="date"]').value = values[3];
+      form.querySelector('[name="time"]').value = values[4];
+      form.querySelector('[name="event_type"]').value = values[5];
+      form.querySelector('[name="gender_identity"]').value = values[6];
+      form.querySelector('[name="notes"]').value = values[7];
+    }
+
+    function logout() {
+      window.location.href = '/logout';
+    }
+  </script>
+
+</body>
+</html>
+ 
