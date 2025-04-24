@@ -5,41 +5,48 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <nav class="navbar">
+        <div class="logo">Gifted Gown</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            <li><a href="{{ url_for('register') }}">Register</a></li>
+        </ul>
+    </nav>
 
-    <h1>Welcome to Gifted Gown</h1>
-    <p>Planning for a special occasion? Schedule your free appointment below.</p>
+    <div class="content">
+        <h1>Welcome to Gifted Gown</h1>
+        <p>Planning for a special occasion? Schedule your free appointment below.</p>
 
-    <form action="/submit" method="POST">
-        <label for="first_name">First Name:</label>
-        <input type="text" id="first_name" name="first_name" required>
+        <form action="/submit" method="POST">
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" required>
 
-        <label for="last_name">Last Name:</label>
-        <input type="text" id="last_name" name="last_name" required>
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required>
 
-        <label for="email">Email Address:</label>
-        <input type="email" id="email" name="email" required>
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" name="email" required>
 
-        <label for="phone">Phone Number:</label>
-        <input type="tel" id="phone" name="phone" placeholder="e.g. 317-555-1234" required>
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" placeholder="e.g. 317-555-1234" required>
 
-        <label for="date">Choose a Date:</label>
-        <input type="date" id="date" name="date" required>
+            <label for="datetime">Choose Date & Time:</label>
+            <input type="datetime-local" id="datetime" name="datetime" required>
 
-        <label for="time">Choose a Time:</label>
-        <input type="time" id="time" name="time" required>
+            <label for="type">Event Type:</label>
+            <select id="type" name="type" required>
+                <option value="Prom">Prom</option>
+                <option value="Graduation">Graduation</option>
+                <option value="Interview">Interview</option>
+                <option value="Other">Other</option>
+            </select>
 
-        <label for="type">Event Type:</label>
-        <select id="type" name="type" required>
-            <option value="Prom">Prom</option>
-            <option value="Graduation">Graduation</option>
-            <option value="Interview">Interview</option>
-            <option value="Other">Other</option>
-        </select>
+            <label for="notes">Anything you'd like us to know?</label>
+            <textarea id="notes" name="notes" rows="4"></textarea>
 
-        <label for="notes">Anything you'd like us to know?</label>
-        <textarea id="notes" name="notes" rows="4"></textarea>
-
-        <button type="submit">Schedule My Visit</button>
-    </form>
+            <button type="submit">Schedule My Visit</button>
+        </form>
+    </div>
 </body>
 </html>
