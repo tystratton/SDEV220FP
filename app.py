@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+import traceback  # Import traceback module
 
 load_dotenv()
 
@@ -28,35 +29,40 @@ def index():
 
 @app.route('/admin')
 def admin():
-    # Use the get_all_appointments function from pipeline.py
-    appointments = get_all_appointments()
-    return render_template('admin.html', appointments=appointments)
+    print(f"Admin Route Session: {session}")
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('You must be logged in as an admin to view this page', 'error')
+        return redirect(url_for('admin_login'))
+    
+    try:
+        appointments = get_all_appointments()
+        print(f"Fetched {len(appointments)} appointments")
+        return render_template('admin.html', appointments=appointments)
+    except Exception as e:
+        print(f"Error fetching appointments: {e}")
+        flash('Error loading admin page data.', 'error')
+        return "Error loading appointments", 500
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    # Collect form data
     first_name = request.form['first_name']
     last_name = request.form['last_name']
-    full_name = f"{first_name} {last_name}"
     email = request.form['email']
     phone = request.form['phone']
-    date = request.form['date']
-    time = request.form['time']
-    # Combine date and time into appointment_time
-    appointment_time = f"{date} {time}"
+    appointment_time = request.form['datetime']  # combined date and time field
     event_type = request.form['type']
-    gender_identity = request.form.get('gender_identity', '')  # Optional field
-    notes = request.form['notes']
+    gender_identity = request.form.get('gender_identity', '')
+    notes = request.form.get('notes', '')
 
-    # Insert into the database
+    # Combine first and last name from form into full_name for the database
+    full_name = f"{first_name} {last_name}"
+
     cur.execute("""
         INSERT INTO appointments (full_name, email, phone, appointment_time, event_type, gender_identity, notes)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
     """, (full_name, email, phone, appointment_time, event_type, gender_identity, notes))
 
     conn.commit()
-
-    # Redirect to a dedicated thank-you page
     return redirect(url_for('thank_you'))
 
 @app.route('/api/appointments/<int:appointment_id>', methods=['PUT'])
@@ -219,6 +225,199 @@ def logout():
     session.clear()
     flash('You have been logged out', 'info')
     return redirect(url_for('index'))
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['email']
+        password = request.form['password']
+        
+        # Check if user exists and password is correct
+        cur.execute("SELECT id, username, password_hash, role FROM users WHERE username = %s AND role = 'admin'", (username,))
+        user = cur.fetchone()
+        
+        if user and bcrypt.check_password_hash(user[2], password):
+            # Store user info in session
+            session['user_id'] = user[0]
+            session['username'] = user[1]
+            session['role'] = user[3]
+            
+            flash('Admin login successful!', 'success')
+            return redirect(url_for('admin'))
+        else:
+            flash('Invalid admin credentials', 'error')
+    
+    # GET request - render the admin login form
+    return render_template('admin_login.html')
+
+@app.route('/admin/register', methods=['GET', 'POST'])
+def admin_register():
+    # Only allow admin creation if no admins exist or if an admin is logged in
+    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    admin_count = cur.fetchone()[0]
+    
+    if admin_count > 0 and ('user_id' not in session or session.get('role') != 'admin'):
+        flash('Admin creation is restricted', 'error')
+        return redirect(url_for('admin_login'))
+    
+    if request.method == 'POST':
+        username = request.form['email']
+        password = request.form['password']
+        
+        # Check if user already exists
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        if cur.fetchone() is not None:
+            flash('Username already registered', 'error')
+            return redirect(url_for('admin_register'))
+        
+        # Hash password
+        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        # Insert new admin user
+        try:
+            cur.execute("""
+                INSERT INTO users (username, password_hash, role, created_at)
+                VALUES (%s, %s, %s, %s)
+            """, (username, password_hash, 'admin', datetime.now()))
+            conn.commit()
+            
+            flash('Admin registration successful!', 'success')
+            return redirect(url_for('admin_login'))
+        except Exception as e:
+            conn.rollback()
+            flash(f'Registration failed: {str(e)}', 'error')
+    
+    # GET request - render the admin registration form
+    return render_template('admin_register.html')
+
+@app.route('/admin/add', methods=['POST'])
+def admin_add_appointment():
+    print("--- Admin Add Appointment Route Hit ---")
+    print(f"Session at start of add: {session}")
+    
+    # Check if admin is logged in
+    if 'user_id' not in session or session.get('role') != 'admin':
+        print("Admin check failed.")
+        flash('Unauthorized action', 'error')
+        # Redirect to admin login or handle appropriately
+        return redirect(url_for('admin_login')) 
+
+    try:
+        print(f"Received form data: {request.form}")
+        
+        # Extract data from form
+        full_name = request.form['full_name']
+        email = request.form['email']
+        phone = request.form['phone']
+        date_str = request.form['date']
+        time_str = request.form['time']
+        event_type = request.form['event_type']
+        gender_identity = request.form.get('gender_identity', '') # Optional field
+        notes = request.form.get('notes', '') # Optional field
+
+        # Combine date and time strings into a format suitable for DB (assuming TIMESTAMP type)
+        appointment_time_str = f"{date_str} {time_str}:00" # Add seconds if needed
+
+        # Remove splitting logic - use full_name directly from form
+        # name_parts = full_name.split(' ', 1)
+        # first_name = name_parts[0]
+        # last_name = name_parts[1] if len(name_parts) > 1 else '' # Handle single names
+        
+        print("Executing DB insert...")
+        cur.execute("""
+            INSERT INTO appointments (full_name, email, phone, appointment_time, event_type, gender_identity, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (full_name, email, phone, appointment_time_str, event_type, gender_identity, notes))
+
+        print("Committing transaction...")
+        conn.commit()
+        print("Commit successful.")
+        flash('Appointment added successfully!', 'success')
+    except Exception as e:
+        conn.rollback()
+        print(f"--- ERROR ADDING APPOINTMENT ---")
+        print(f"Exception Type: {type(e)}")
+        print(f"Exception Args: {e.args}")
+        print(f"Traceback:")
+        traceback.print_exc() # Print the full traceback
+        print(f"--- END ERROR DETAILS ---")
+        # Keep the original generic flash message for the user interface
+        flash('Error adding appointment.', 'error')
+
+    print("Redirecting to admin page.")
+    return redirect(url_for('admin'))
+
+@app.route('/admin/edit/<int:appointment_id>', methods=['POST'])
+def admin_edit_appointment(appointment_id):
+    # Check if admin is logged in
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Unauthorized action', 'error')
+        return redirect(url_for('admin_login'))
+
+    try:
+        # Extract data from form (similar to /admin/add, but for updating)
+        full_name = request.form['full_name']
+        email = request.form['email']
+        phone = request.form['phone']
+        date_str = request.form['date']
+        time_str = request.form['time']
+        event_type = request.form['event_type']
+        gender_identity = request.form.get('gender_identity', '')
+        notes = request.form.get('notes', '')
+
+        # Combine date and time
+        appointment_time_str = f"{date_str} {time_str}:00"
+
+        # Remove splitting logic - use full_name directly from form
+        # name_parts = full_name.split(' ', 1)
+        # first_name = name_parts[0]
+        # last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        # Update the appointment in the database
+        update_query = """
+            UPDATE appointments
+            SET full_name = %s, email = %s, phone = %s,
+                appointment_time = %s, event_type = %s, gender_identity = %s, notes = %s
+            WHERE id = %s
+        """
+        cur.execute(update_query, (
+            full_name, email, phone, appointment_time_str,
+            event_type, gender_identity, notes, appointment_id
+        ))
+        conn.commit()
+        flash(f'Appointment {appointment_id} updated successfully!', 'success')
+
+    except Exception as e:
+        conn.rollback()
+        import traceback
+        print(f"--- ERROR UPDATING APPOINTMENT {appointment_id} ---")
+        print(f"Exception Type: {type(e)}")
+        print(f"Exception Args: {e.args}")
+        print(f"Traceback:")
+        traceback.print_exc()
+        print(f"--- END ERROR DETAILS ---")
+        flash('Error updating appointment.', 'error')
+
+    return redirect(url_for('admin'))
+
+@app.route('/admin/delete/<int:appointment_id>', methods=['POST'])
+def delete_appointment(appointment_id):
+    # Check if admin is logged in
+    if 'user_id' not in session or session.get('role') != 'admin':
+        flash('Unauthorized action', 'error')
+        return redirect(url_for('admin_login'))
+
+    try:
+        # Execute DELETE SQL command
+        cur.execute("DELETE FROM appointments WHERE id = %s", (appointment_id,))
+        conn.commit()
+        flash(f'Appointment {appointment_id} deleted successfully', 'success')
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting appointment {appointment_id}: {e}")
+        flash('Error deleting appointment', 'error')
+    
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True)

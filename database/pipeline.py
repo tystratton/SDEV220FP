@@ -17,10 +17,23 @@ def get_db_connection():
     return conn
 
 def get_all_appointments():
-    """Retrieve all appointments ordered by date/time"""
+    """Retrieve all appointments ordered by date/time."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT * FROM appointments ORDER BY appointment_time DESC"
+    # Select columns explicitly, using the existing full_name
+    query = """
+        SELECT
+            id,
+            full_name, -- Use existing full_name column
+            email,
+            phone,
+            appointment_time,
+            event_type,
+            gender_identity,
+            notes
+        FROM appointments
+        ORDER BY appointment_time DESC
+    """
     cursor.execute(query)
     appointments = cursor.fetchall()
     cursor.close()

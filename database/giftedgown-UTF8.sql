@@ -5,8 +5,6 @@
 -- Dumped from database version 17.4
 -- Dumped by pg_dump version 17.4
 
--- Started on 2025-04-23 09:30:22
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -24,7 +22,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 217 (class 1259 OID 16392)
 -- Name: appointments; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -44,7 +41,6 @@ CREATE TABLE public.appointments (
 ALTER TABLE public.appointments OWNER TO postgres;
 
 --
--- TOC entry 218 (class 1259 OID 16398)
 -- Name: appointments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -60,8 +56,6 @@ CREATE SEQUENCE public.appointments_id_seq
 ALTER SEQUENCE public.appointments_id_seq OWNER TO postgres;
 
 --
--- TOC entry 4907 (class 0 OID 0)
--- Dependencies: 218
 -- Name: appointments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
@@ -69,14 +63,14 @@ ALTER SEQUENCE public.appointments_id_seq OWNED BY public.appointments.id;
 
 
 --
--- TOC entry 219 (class 1259 OID 16402)
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.users (
-    username character varying(100) NOT NULL,
-    "timestamp" timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    password_hash character varying(50) NOT NULL,
+    id integer NOT NULL,
+    username character varying(80) NOT NULL,
+    password_hash character varying(128) NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     role character varying(50) DEFAULT 'user'::character varying NOT NULL
 );
 
@@ -84,7 +78,28 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
--- TOC entry 4746 (class 2604 OID 16399)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
 -- Name: appointments id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -92,8 +107,13 @@ ALTER TABLE ONLY public.appointments ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
--- TOC entry 4899 (class 0 OID 16392)
--- Dependencies: 217
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
 -- Data for Name: appointments; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -102,31 +122,36 @@ COPY public.appointments (id, full_name, email, phone, appointment_time, event_t
 2	Marcus Lee	marcus.l@example.com	317-555-2345	2025-04-11 10:30:00	Interview	Male	Needs something conservative for an office setting.	2025-04-07 14:32:51.852921
 3	Taylor Nguyen	\N	317-555-3456	2025-04-12 13:00:00	Graduation	Non-binary	Prefers neutral tones.	2025-04-07 14:32:51.852921
 4	Samantha Green	sam.green@example.com	\N	2025-04-13 15:00:00	Wedding	Female	Attending as a guest.	2025-04-07 14:32:51.852921
-5	Devon Brooks	devon.b@example.com	317-555-4567	2025-04-14 11:00:00	Interview	Male	Looking for dress shoes as well.	2025-04-07 14:32:51.852921
+5	Devon Brooks	devon.b@example.com	317-555-6666	2025-04-14 11:00:00	Interview	Male	Looking for dress shoes as well.	2025-04-07 14:32:51.852921
+6	Ty Stratton	tstrattondsgn@gmail.com	3175002071	1994-09-22 11:11:00	asd	asdasd	asd	2025-04-28 12:08:28.141106
 \.
 
 
 --
--- TOC entry 4901 (class 0 OID 16402)
--- Dependencies: 219
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (username, "timestamp", password_hash, role) FROM stdin;
+COPY public.users (id, username, password_hash, created_at, role) FROM stdin;
+1	tysonthetyrant@gmail.com	$2b$12$.qjub0l29r0Zj.K/HWFkSuttkCunmr3Y6uDj9uoikrjoFd8UENLsK	2025-04-22 18:12:04.902372-04	user
+2	tystratton	$2b$12$rZ8dHTVVX3PGI5EbEddINecBxeeNsxY2fU93OjYzfReMtma/uVE12	2025-04-28 09:04:11.956569-04	admin
 \.
 
 
 --
--- TOC entry 4908 (class 0 OID 0)
--- Dependencies: 218
 -- Name: appointments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.appointments_id_seq', 5, true);
+SELECT pg_catalog.setval('public.appointments_id_seq', 6, true);
 
 
 --
--- TOC entry 4751 (class 2606 OID 16401)
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 2, true);
+
+
+--
 -- Name: appointments appointments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -135,15 +160,20 @@ ALTER TABLE ONLY public.appointments
 
 
 --
--- TOC entry 4753 (class 2606 OID 16407)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (username);
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
 
--- Completed on 2025-04-23 09:30:22
+--
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
 
 --
 -- PostgreSQL database dump complete
