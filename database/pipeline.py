@@ -40,6 +40,21 @@ def get_all_appointments():
     conn.close()
     return appointments
 
+def get_all_users(): 
+    """Retrieve all users with the username and role."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+        SELECT username, role
+        FROM users 
+        ORDER BY username
+    """
+    cursor.execute(query)
+    users = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return users
+
 # Angela's queries, in case we need them later
 #def get_appointments_by_event_type(): 
 # query = "SELECT * FROM appointments WHERE event_type = "

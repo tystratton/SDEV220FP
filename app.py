@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 import psycopg2
 from database.pipeline import get_all_appointments
+from database.pipeline import get_all_users
 from dotenv import load_dotenv
 import os
 from flask_bcrypt import Bcrypt
@@ -418,6 +419,29 @@ def delete_appointment(appointment_id):
         flash('Error deleting appointment', 'error')
     
     return redirect(url_for('admin'))
+# New routes to get users and change user roles.
+@app.route('/api/users', methods=['GET'])  
+def api_get_users():
+    try: 
+        users = get_all_users()
+        return jsonify(users=[{'username': u[0], 'role': u[1]} for u in users])
+    except Exception as e: 
+        return jsonify({'error';: str(e)})
+    
+@app.route('/api/users/<string:username>/role', methods=['PUT'])
+def api_change_user_role(username):
+    try: 
+        data = request.get_json()
+        new_role = data.get('role')
+        if new_role not in ['admin', 'user']:
+            return jsonify({'error': 'Invalid role'})
+        
+        cur.execute("UPDATE users SET role = %s WHERE username = %s", (new_role, username))
+        conn.commit()
+        return jsonify({'message': f"Role changed for {username} to {new_role}"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
     app.run(debug=True)
