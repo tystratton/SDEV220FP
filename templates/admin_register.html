@@ -1,0 +1,126 @@
+<!-- templates/register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - Admin</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .form-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .form-container h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .form-container input {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .form-container button {
+      width: 100%;
+      padding: 12px;
+      background-color: #3c4db3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .form-container button:hover {
+      background-color: #303fa3;
+    }
+
+    .flash-message {
+      margin-top: 15px;
+      color: #cc0000;
+      font-weight: 500;
+    }
+
+    .feedback {
+      text-align: left;
+      font-size: 14px;
+      color: #cc0000;
+      margin-bottom: 10px;
+    }
+
+    .feedback.valid {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Register Admin Account</h2>
+    <form method="POST" action="{{ url_for('admin_register') }}">
+      <input type="email" name="email" placeholder="Email" required />
+      <input type="password" id="password" name="password" placeholder="Password" required
+        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}"
+        title="Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character." />
+      <div id="passwordFeedback" class="feedback"></div>
+      <button type="submit" id="registerBtn" disabled>Register</button>
+    </form>
+    <p style="margin-top: 10px;">
+      <a href="{{ url_for('admin_login') }}" style="color: #3c4db3; text-decoration: none;">Back to Login</a>
+    </p>    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <p class="flash-message"><strong>{{ category }}:</strong> {{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+  <script>
+    const passwordInput = document.getElementById('password');
+    const feedback = document.getElementById('passwordFeedback');
+    const registerBtn = document.getElementById('registerBtn');
+  
+    passwordInput.addEventListener('input', function () {
+      const value = passwordInput.value;
+      const checks = [
+        { test: /.{8,}/, message: "At least 8 characters" },
+        { test: /[A-Z]/, message: "At least one uppercase letter" },
+        { test: /[a-z]/, message: "At least one lowercase letter" },
+        { test: /[0-9]/, message: "At least one number" },
+        { test: /[\W_]/, message: "At least one special character" }
+      ];
+  
+      let allPassed = true;
+      const results = checks.map(check => {
+        const passed = check.test.test(value);
+        if (!passed) allPassed = false;
+        return `<div class="${passed ? 'valid' : ''}">${passed ? '✓' : '✗'} ${check.message}</div>`;
+      });
+  
+      feedback.innerHTML = results.join('');
+      registerBtn.disabled = !allPassed;
+    });
+  </script>  
+</body>
+</html>
