@@ -5,14 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Gifted Gown</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Add your styles here */
+    </style>
 </head>
 <body>
     <nav class="navbar">
         <div class="logo">Gifted Gown</div>
         <ul class="nav-links">
             <li><a href="{{ url_for('index') }}">Home</a></li>
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-            <li><a href="{{ url_for('register') }}" class="active">Register</a></li>
+    
+            {# Admin-specific link (Unlikely needed here, but for consistency) #}
+            {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('admin') }}">Appointments</a></li>
+            {% endif %}
+    
+            {# Show Logout if logged in #}
+            {% if session.get('user_id') %}
+                <li><a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a></li>
+            {# Show Login/Register if not logged in #}
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li> {# Add active class if needed #}
+            {% endif %}
         </ul>
     </nav>
 
@@ -36,8 +51,20 @@
             </div>
             <div>
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password" required
+                  pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}"
+                  title="Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.">
             </div>
+            <div id="passwordFeedback" class="feedback"></div>
+            
+            <!-- Conditionally show Admin registration option -->
+            {% if show_admin_option %}
+            <div style="text-align: left; margin-bottom: 15px;">
+                <input type="checkbox" id="register_as_admin" name="register_as_admin" value="true" style="width: auto; vertical-align: middle; margin-right: 5px;">
+                <label for="register_as_admin" style="display: inline;">Register as Initial Admin?</label>
+            </div>
+            {% endif %}
+
             <!-- Add confirm password field if desired -->
             <!-- <div>
                 <label for="confirm_password">Confirm Password:</label>

@@ -161,35 +161,70 @@ def thank_you():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Check if admin registration should be offered (only if no admins exist)
+    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    admin_count = cur.fetchone()[0]
+    show_admin_option = admin_count == 0
+
     if request.method == 'POST':
         username = request.form['email']
         password = request.form['password']
+        register_as_admin_checked = request.form.get('register_as_admin') == 'true'
+
+        # Determine role based on checkbox and re-verification of admin count
+        role = 'user' # Default role
+        if register_as_admin_checked and show_admin_option: # Use show_admin_option which reflects count *at time of POST*
+             # Double-check admin count right before insert to be safe
+            cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+            current_admin_count = cur.fetchone()[0]
+            if current_admin_count == 0:
+                role = 'admin'
+            else:
+                # Edge case: an admin was created between page load and form submission
+                flash('Admin already exists. Registering as regular user.', 'warning')
         
-        # Check if user already exists
+        # Check if user already exists (regardless of role check)
         cur.execute("SELECT * FROM users WHERE username = %s", (username,))
         if cur.fetchone() is not None:
             flash('Username already registered. Please log in.', 'error')
-            return redirect(url_for('login'))
+            # Pass the show_admin_option flag back even on failed registration attempt
+            return render_template('register.html', show_admin_option=show_admin_option) 
         
         # Hash password
         password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
         
-        # Insert new user
+        # Insert new user with determined role
         try:
             cur.execute("""
                 INSERT INTO users (username, password_hash, role, created_at)
                 VALUES (%s, %s, %s, %s)
-            """, (username, password_hash, 'user', datetime.now()))
+                RETURNING id
+            """, (username, password_hash, role, datetime.now())) # Use the determined role
+            
+            new_user_id = cur.fetchone()[0] # Get the ID of the newly created user
             conn.commit()
             
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
+            flash(f'Registration successful as {role}! Please log in.', 'success') # Notify user of their role
+
+            # If registered as admin, log them in immediately and redirect to admin dashboard
+            if role == 'admin':
+                session['user_id'] = new_user_id
+                session['username'] = username
+                session['role'] = role
+                flash('Admin registration successful! You are now logged in.', 'success') # Update flash message
+                return redirect(url_for('admin'))
+            else:
+                # For regular users, redirect to the standard login page
+                return redirect(url_for('login')) 
+
         except Exception as e:
             conn.rollback()
             flash(f'Registration failed: {str(e)}', 'error')
+            # Need to pass the flag back on exception too
+            return render_template('register.html', show_admin_option=show_admin_option)
     
-    # GET request - render the registration form
-    return render_template('register.html')
+    # GET request - render the registration form, passing the flag
+    return render_template('register.html', show_admin_option=show_admin_option)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -250,46 +285,6 @@ def admin_login():
     
     # GET request - render the admin login form
     return render_template('admin_login.html')
-
-@app.route('/admin/register', methods=['GET', 'POST'])
-def admin_register():
-    # Only allow admin creation if no admins exist or if an admin is logged in
-    cur.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
-    admin_count = cur.fetchone()[0]
-    
-    if admin_count > 0 and ('user_id' not in session or session.get('role') != 'admin'):
-        flash('Admin creation is restricted', 'error')
-        return redirect(url_for('admin_login'))
-    
-    if request.method == 'POST':
-        username = request.form['email']
-        password = request.form['password']
-        
-        # Check if user already exists
-        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
-        if cur.fetchone() is not None:
-            flash('Username already registered', 'error')
-            return redirect(url_for('admin_register'))
-        
-        # Hash password
-        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-        
-        # Insert new admin user
-        try:
-            cur.execute("""
-                INSERT INTO users (username, password_hash, role, created_at)
-                VALUES (%s, %s, %s, %s)
-            """, (username, password_hash, 'admin', datetime.now()))
-            conn.commit()
-            
-            flash('Admin registration successful!', 'success')
-            return redirect(url_for('admin_login'))
-        except Exception as e:
-            conn.rollback()
-            flash(f'Registration failed: {str(e)}', 'error')
-    
-    # GET request - render the admin registration form
-    return render_template('admin_register.html')
 
 @app.route('/admin/add', methods=['POST'])
 def admin_add_appointment():
@@ -390,7 +385,6 @@ def admin_edit_appointment(appointment_id):
 
     except Exception as e:
         conn.rollback()
-        import traceback
         print(f"--- ERROR UPDATING APPOINTMENT {appointment_id} ---")
         print(f"Exception Type: {type(e)}")
         print(f"Exception Args: {e.args}")
@@ -426,7 +420,7 @@ def api_get_users():
         users = get_all_users()
         return jsonify(users=[{'username': u[0], 'role': u[1]} for u in users])
     except Exception as e: 
-        return jsonify({'error';: str(e)})
+        return jsonify({'error': str(e)})
     
 @app.route('/api/users/<string:username>/role', methods=['PUT'])
 def api_change_user_role(username):

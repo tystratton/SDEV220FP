@@ -8,9 +8,21 @@
     <nav class="navbar">
         <div class="logo">Gifted Gown</div>
         <ul class="nav-links">
-            <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
-            <li><a href="{{ url_for('login') }}">Login</a></li>
-            <li><a href="{{ url_for('register') }}">Register</a></li>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+    
+            {# Admin-specific link #}
+            {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('admin') }}">Appointments</a></li>
+            {% endif %}
+    
+            {# Show Logout if logged in #}
+            {% if session.get('user_id') %}
+                <li><a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a></li>
+            {# Show Login/Register if not logged in #}
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+            {% endif %}
         </ul>
     </nav>
 

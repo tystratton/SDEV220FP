@@ -5,10 +5,31 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>🎉 Thank You!</h1>
-    <p>Your appointment request has been successfully submitted.</p>
-    <p>We'll be in touch soon!</p>
+    <nav class="navbar">
+        <div class="logo">Gifted Gown</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
     
-    <a href="/" class="button">Back to Home</a>
+            {# Admin-specific link #}
+            {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('admin') }}">Appointments</a></li>
+            {% endif %}
+    
+            {# Show Logout if logged in #}
+            {% if session.get('user_id') %}
+                <li><a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a></li>
+            {# Show Login/Register if not logged in #}
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('register') }}">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="content">
+        <h1>🎉 Thank You!</h1>
+        <p>Your appointment request has been successfully submitted.</p>
+        <p>We'll be in touch soon!</p>
+    </div>
 </body>
 </html>

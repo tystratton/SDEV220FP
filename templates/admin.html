@@ -4,15 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Gifted Gown - Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <style>
-    body {
+    /* Scoped styles for admin content */
+    .admin-content body { /* This selector is likely too broad, should be more specific if body styles conflict */
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background-color: #f9f9f9;
       padding: 20px;
       overflow-x: hidden;
     }
 
-    .header {
+    .admin-content .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -20,7 +22,7 @@
       flex-wrap: wrap;
     }
 
-    .header h2 {
+    .admin-content .header h2 {
       font-size: 24px;
       font-weight: bold;
       display: flex;
@@ -30,7 +32,7 @@
       margin-bottom: 10px;
     }
 
-    .header button,
+    .admin-content .header button,
     .logout-container button {
       background-color: #3c4db3;
       color: white;
@@ -41,13 +43,13 @@
       cursor: pointer;
     }
 
-    .logout-container {
+    .admin-content .logout-container {
       display: flex;
       justify-content: flex-end;
       margin-bottom: 10px;
     }
 
-    table {
+    .admin-content table {
       width: 100%;
       border-collapse: collapse;
       background-color: white;
@@ -57,30 +59,30 @@
       min-width: 800px;
     }
 
-    thead, tbody {
+    .admin-content thead, .admin-content tbody { /* Scope thead/tbody */
       width: 100%;
       display: table;
       table-layout: fixed;
     }
 
-    th, td {
+    .admin-content th, .admin-content td { /* Scope th/td */
       padding: 12px;
       text-align: left;
       word-wrap: break-word;
       vertical-align: top;
     }
 
-    th {
+    .admin-content th { /* Scope th */
       background-color: #fafafa;
       font-weight: 600;
     }
 
-    tr:not(:last-child) {
+    .admin-content tr:not(:last-child) { /* Scope tr */
       border-bottom: 1px solid #eee;
     }
 
-    td input, td textarea {
-      width: 100%;
+    .admin-content td input, .admin-content td textarea { /* Scope inputs/textareas inside TD */
+      width: 100%; /* Keep 100% width relative to cell */
       box-sizing: border-box;
       border: 1px solid #eee;
       padding: 8px;
@@ -88,26 +90,29 @@
       background-color: #fff;
       font-family: inherit;
       font-size: inherit;
+      /* Reset margin if necessary from global styles */
+      margin-bottom: 0; 
     }
 
-    td textarea {
+    .admin-content td textarea { /* Scope textarea inside TD */
         resize: vertical;
         min-height: 38px;
     }
 
-    .action-buttons form {
+    .admin-content .action-buttons form { /* Scope forms in action buttons */
         display: inline-block;
         margin-right: 5px;
     }
-    .action-buttons button {
+    .admin-content .action-buttons button { /* Scope buttons in action buttons */
         background: none;
         border: none;
         cursor: pointer;
         font-size: 1.2em;
         padding: 5px;
+        width: auto; /* Override global button width: 100% */
     }
 
-    .form-popup {
+    .admin-content .form-popup { /* Scope form popup */
       display: none;
       position: fixed;
       top: 20%;
@@ -122,70 +127,44 @@
       max-width: 500px;
     }
 
-    .form-popup input, .form-popup select, .form-popup textarea {
+    .admin-content .form-popup input, 
+    .admin-content .form-popup select, 
+    .admin-content .form-popup textarea { /* Scope inputs within popup */
       display: block;
       margin-bottom: 10px;
       padding: 8px;
-      width: 100%;
+      width: 100%; /* Keep 100% width relative to popup */
       border-radius: 5px;
       border: 1px solid #ccc;
     }
 
-    .form-popup button {
+    .admin-content .form-popup button { /* Scope buttons within popup */
       margin-top: 10px;
+      width: auto; /* Allow buttons to size naturally or set specific width */
+      padding: 10px 16px; /* Re-apply padding if needed */
     }
 
-    /* Pink Navbar Styles */
-    .admin-navbar {
-      background-color: #ffc0cb; /* Pink */
-      padding: 10px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .admin-navbar .logo {
-        font-size: 1.5em;
-        font-weight: bold;
-        color: #333; /* Darker text for contrast */
-    }
-    .admin-navbar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      gap: 15px;
-    }
-    .admin-navbar ul li a {
-      text-decoration: none;
-      color: #333; /* Darker text */
-      font-weight: 500;
-    }
-    .admin-navbar ul li a:hover,
-    .admin-navbar ul li a.active {
-      color: #a05278; /* Darker pink for hover/active */
-    }
+    /* Removed Pink Navbar Styles as navbar is now global */
 
-    /* Flash Message Styles */
-    .flash-messages {
+    /* Scoped Flash Message Styles (already using specific classes, likely okay) */
+    .admin-content .flash-messages {
       padding: 10px;
       margin-bottom: 15px;
     }
-    .alert {
+    .admin-content .alert {
         padding: 10px;
         border-radius: 5px;
         margin-bottom: 5px;
     }
-    .alert-success {
+    .admin-content .alert-success {
         background-color: #d4edda;
         color: #155724;
     }
-    .alert-error {
+    .admin-content .alert-error {
         background-color: #f8d7da;
         color: #721c24;
     }
-    .alert-info {
+    .admin-content .alert-info {
         background-color: #cce5ff;
         color: #004085;
     }
@@ -195,95 +174,111 @@
 </head>
 <body>
 
-  <!-- Pink Navbar -->
-  <nav class="admin-navbar">
-    <div class="logo">Gifted Gown - Admin</div>
-    <ul>
-      <li><a href="{{ url_for('index') }}">Home</a></li>
-      <li><a href="{{ url_for('admin') }}" class="active">Appointments</a></li>
-      <li><a href="{{ url_for('login') }}">Login</a></li>
-      <li><a href="{{ url_for('register') }}">Register</a></li>
-    </ul>
+  {# Standardized Navbar #}
+  <nav class="navbar">
+      <div class="logo">Gifted Gown</div>
+      <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+  
+          {# Admin-specific link #}
+          {% if session.get('role') == 'admin' %}
+              <li><a href="{{ url_for('admin') }}">Appointments</a></li> {# Add active class if needed #}
+          {% endif %}
+  
+          {# Show Logout if logged in #}
+          {% if session.get('user_id') %}
+              <li><a href="{{ url_for('logout') }}">Logout ({{ session.get('username') }})</a></li>
+          {# Show Login/Register if not logged in (Should not happen on admin page, but good practice) #}
+          {% else %}
+              <li><a href="{{ url_for('login') }}">Login</a></li>
+              <li><a href="{{ url_for('register') }}">Register</a></li>
+          {% endif %}
+      </ul>
   </nav>
+  {# End Standardized Navbar #}
 
-  <!-- Flash Messages Section -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+  {# Wrap admin-specific content to scope styles #}
+  <div class="admin-content">
 
-  <div class="logout-container">
-    <button onclick="logout()">Logout</button>
-  </div>
+    {# Flash Messages - Moved slightly down #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages" style="padding: 10px; margin-bottom: 15px;">
+                {% for category, message in messages %}
+                    {# Map category to Bootstrap alert class if using Bootstrap, else custom #}
+                    {% set alert_class = 'alert-info' %}
+                    {% if category == 'success' %}{% set alert_class = 'alert-success' %}{% endif %}
+                    {% if category == 'error' %}{% set alert_class = 'alert-error' %}{% endif %}
+                    <div class="alert {{ alert_class }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-  <div class="header">
-    <h2>Gifted Gown</h2>
-  </div>
-  <div class="header">
-    <h2>Appointments ✏️</h2>
-    <button onclick="openForm()">Add Appointment</button>
-  </div>
+    <div class="header">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Appointment Management
+      </h2>
+      {# Removed logout container, handled by navbar #}
+      <button onclick="openAddForm()">Add Appointment</button>
+    </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Full Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Event Type</th>
-        <th>Gender</th>
-        <th>Notes</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for appt in appointments %}
-      <tr>
-        <form action="{{ url_for('admin_edit_appointment', appointment_id=appt[0]) }}" method="post" class="inline-edit-form">
-            <td><input type="text" name="full_name" value="{{ appt[1] }}" /></td>
-            <td><input type="email" name="email" value="{{ appt[2] }}" /></td>
-            <td><input type="text" name="phone" value="{{ appt[3] }}" /></td>
-            <td><input type="date" name="date" value="{{ appt[4].strftime('%Y-%m-%d') if appt[4] else '' }}" /></td>
-            <td><input type="time" name="time" value="{{ appt[4].strftime('%H:%M') if appt[4] else '' }}" /></td>
-            <td><input type="text" name="event_type" value="{{ appt[5] }}" /></td>
-            <td><input type="text" name="gender_identity" value="{{ appt[6] }}" /></td>
-            <td><textarea name="notes">{{ appt[7] }}</textarea></td>
-            <td class="action-buttons">
-              <button type="submit" title="Save Changes">💾</button>
-        </form>
-          <form action="{{ url_for('delete_appointment', appointment_id=appt[0]) }}" method="post" style="display:inline;">
-            <button type="submit" title="Delete Appointment">🗑️</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Event Type</th>
+          <th>Gender</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appt in appointments %}
+        <tr>
+          <form action="{{ url_for('admin_edit_appointment', appointment_id=appt[0]) }}" method="post" class="inline-edit-form">
+              <td><input type="text" name="full_name" value="{{ appt[1] }}" /></td>
+              <td><input type="email" name="email" value="{{ appt[2] }}" /></td>
+              <td><input type="text" name="phone" value="{{ appt[3] }}" /></td>
+              <td><input type="date" name="date" value="{{ appt[4].strftime('%Y-%m-%d') if appt[4] else '' }}" /></td>
+              <td><input type="time" name="time" value="{{ appt[4].strftime('%H:%M') if appt[4] else '' }}" /></td>
+              <td><input type="text" name="event_type" value="{{ appt[5] }}" /></td>
+              <td><input type="text" name="gender_identity" value="{{ appt[6] }}" /></td>
+              <td><textarea name="notes">{{ appt[7] }}</textarea></td>
+              <td class="action-buttons">
+                <button type="submit" title="Save Changes">💾</button>
           </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+            <form action="{{ url_for('delete_appointment', appointment_id=appt[0]) }}" method="post" style="display:inline;">
+              <button type="submit" title="Delete Appointment">🗑️</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  <div class="form-popup" id="formPopup">
-    <h3>Add Appointment</h3>
-    <form id="popupForm" action="{{ url_for('admin_add_appointment') }}" method="post">
-      <input type="text" name="full_name" placeholder="Full Name" required />
-      <input type="email" name="email" placeholder="Email" required />
-      <input type="text" name="phone" placeholder="Phone" required />
-      <input type="date" name="date" required />
-      <input type="time" name="time" required />
-      <input type="text" name="event_type" placeholder="Event Type" required />
-      <input type="text" name="gender_identity" placeholder="Gender Identity" />
-      <textarea name="notes" placeholder="Notes"></textarea>
-      <button type="submit">Save</button>
-      <button type="button" onclick="closeForm()">Cancel</button>
-    </form>
-  </div>
+    <div class="form-popup" id="formPopup">
+      <h3>Add Appointment</h3>
+      <form id="popupForm" action="{{ url_for('admin_add_appointment') }}" method="post">
+        <input type="text" name="full_name" placeholder="Full Name" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="text" name="phone" placeholder="Phone" required />
+        <input type="date" name="date" required />
+        <input type="time" name="time" required />
+        <input type="text" name="event_type" placeholder="Event Type" required />
+        <input type="text" name="gender_identity" placeholder="Gender Identity" />
+        <textarea name="notes" placeholder="Notes"></textarea>
+        <button type="submit">Save</button>
+        <button type="button" onclick="closeForm()">Cancel</button>
+      </form>
+    </div>
+
+  </div> {# End admin-content wrapper #}
 
   <script>
     function openForm() {
