@@ -17,11 +17,12 @@ bcrypt = Bcrypt(app)
 
 # Database connection setup
 conn = psycopg2.connect(
-    host="localhost",
-    database="giftedgown",
-    user="postgres",
-    password=os.getenv("DB_PASSWORD")
+    host=os.environ.get("DB_HOST", "db"),
+    database=os.environ.get("DB_NAME", "giftedgown"),
+    user=os.environ.get("DB_USER", "postgres"),
+    password=os.environ.get("DB_PASS", "")
 )
+
 cur = conn.cursor()
 
 @app.route('/')
@@ -438,4 +439,4 @@ def api_change_user_role(username):
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
