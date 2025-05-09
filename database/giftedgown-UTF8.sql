@@ -8,7 +8,7 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
+-- SET transaction_timeout = 0;  -- Removed because it causes errors in Postgres
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -114,41 +114,17 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- Data for Name: appointments; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Name: appointments id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-COPY public.appointments (id, full_name, email, phone, appointment_time, event_type, gender_identity, notes, created_at) FROM stdin;
-1	Jasmine Rivera	jasmine.r@example.com	317-555-1234	2025-04-10 14:00:00	Prom	Female	Wants something in navy or black.	2025-04-07 14:32:51.852921
-2	Marcus Lee	marcus.l@example.com	317-555-2345	2025-04-11 10:30:00	Interview	Male	Needs something conservative for an office setting.	2025-04-07 14:32:51.852921
-3	Taylor Nguyen	\N	317-555-3456	2025-04-12 13:00:00	Graduation	Non-binary	Prefers neutral tones.	2025-04-07 14:32:51.852921
-4	Samantha Green	sam.green@example.com	\N	2025-04-13 15:00:00	Wedding	Female	Attending as a guest.	2025-04-07 14:32:51.852921
-5	Devon Brooks	devon.b@example.com	317-555-6666	2025-04-14 11:00:00	Interview	Male	Looking for dress shoes as well.	2025-04-07 14:32:51.852921
-6	Ty Stratton	tstrattondsgn@gmail.com	3175002071	1994-09-22 11:11:00	asd	asdasd	asd	2025-04-28 12:08:28.141106
-\.
+ALTER TABLE ONLY public.appointments ALTER COLUMN id SET DEFAULT nextval('public.appointments_id_seq'::regclass);
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, username, password_hash, created_at, role) FROM stdin;
-1	tysonthetyrant@gmail.com	$2b$12$.qjub0l29r0Zj.K/HWFkSuttkCunmr3Y6uDj9uoikrjoFd8UENLsK	2025-04-22 18:12:04.902372-04	user
-2	tystratton	$2b$12$rZ8dHTVVX3PGI5EbEddINecBxeeNsxY2fU93OjYzfReMtma/uVE12	2025-04-28 09:04:11.956569-04	admin
-\.
-
-
---
--- Name: appointments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.appointments_id_seq', 6, true);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 2, true);
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --

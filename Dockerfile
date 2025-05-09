@@ -7,16 +7,19 @@ RUN apt-get update && apt-get install -y postgresql-client
 # Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY . /app
+# Copy project files first (excluding .dockerignore items)
+COPY . /app/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy wait-for script and make it executable
-COPY wait_for_postgres.sh /wait_for_postgres.sh
-RUN chmod +x /wait_for_postgres.sh
+# Make it executable from its location in /app
+RUN chmod +x /app/wait_for_postgres.sh
 
-# Run the wait-for script on startup
-CMD ["sh", "-c", "/wait_for_postgres.sh && python app.py"]
+# ---- START DEBUG ----
+RUN ls -la /app/
+# ---- END DEBUG ----
+
+# Run the wait-for script on startup, referencing it with its full path
+CMD ["sh", "-c", "/app/wait_for_postgres.sh && python app.py"]
 

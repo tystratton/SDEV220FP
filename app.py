@@ -1,3 +1,7 @@
+# Ty's Work
+# 5/8/2025
+# This file is the for the application and Flask server
+
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 import psycopg2
 from database.pipeline import get_all_appointments
@@ -6,10 +10,19 @@ from dotenv import load_dotenv
 import os
 from flask_bcrypt import Bcrypt
 from datetime import datetime
-import traceback  # Import traceback module
+import traceback
 
 load_dotenv()
 
+# Get database connection details from environment variables
+db_host = os.getenv("DB_HOST", "localhost")
+db_name = os.getenv("DB_NAME", "giftedgown")
+db_user = os.getenv("DB_USER", "postgres")
+db_password = os.getenv("DB_PASS")
+
+# Fallback for local DB_PASSWORD if DB_PASS (from Docker) isn't set
+if db_password is None:
+    db_password = os.getenv("DB_PASSWORD")
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_key_for_testing")
@@ -17,10 +30,10 @@ bcrypt = Bcrypt(app)
 
 # Database connection setup
 conn = psycopg2.connect(
-    host=os.environ.get("DB_HOST", "db"),
-    database=os.environ.get("DB_NAME", "giftedgown"),
-    user=os.environ.get("DB_USER", "postgres"),
-    password=os.environ.get("DB_PASS", "")
+    host=db_host,
+    database=db_name,
+    user=db_user,
+    password=db_password
 )
 
 cur = conn.cursor()
@@ -314,11 +327,6 @@ def admin_add_appointment():
 
         # Combine date and time strings into a format suitable for DB (assuming TIMESTAMP type)
         appointment_time_str = f"{date_str} {time_str}:00" # Add seconds if needed
-
-        # Remove splitting logic - use full_name directly from form
-        # name_parts = full_name.split(' ', 1)
-        # first_name = name_parts[0]
-        # last_name = name_parts[1] if len(name_parts) > 1 else '' # Handle single names
         
         print("Executing DB insert...")
         cur.execute("""
@@ -364,11 +372,6 @@ def admin_edit_appointment(appointment_id):
 
         # Combine date and time
         appointment_time_str = f"{date_str} {time_str}:00"
-
-        # Remove splitting logic - use full_name directly from form
-        # name_parts = full_name.split(' ', 1)
-        # first_name = name_parts[0]
-        # last_name = name_parts[1] if len(name_parts) > 1 else ''
 
         # Update the appointment in the database
         update_query = """

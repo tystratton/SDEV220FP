@@ -1,3 +1,7 @@
+# Angela's Work
+# 5/8/2025
+# This file is used to connect to the database and retrieve data
+
 import psycopg2
 from dotenv import load_dotenv
 import os
